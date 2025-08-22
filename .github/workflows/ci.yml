@@ -1,0 +1,16 @@
+name: Bash Hello World
+
+on: [push]   # Trigger workflow when code is pushed
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest   # GitHub-hosted Ubuntu runner
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4   # Pulls your repo into the runner
+
+      - name: Run Hello World Bash script
+        run: |
+          echo "Hello, World! from Bash 🚀"
+          echo "This is running inside GitHub Actions!"
