@@ -1,38 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My First Website</title>
+  <meta charset="UTF-8">
+  <title>Wikipedia API Search Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f9f9f9;
-      color: #333;
-      padding: 50px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f6f6f6;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      background: #fff;
+      max-width: 600px;
+      margin: 30px auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      padding: 30px 24px;
     }
     h1 {
-      color: #0077cc;
+      text-align: center;
+      color: #2d3a4b;
     }
-    a.button {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color: #0077cc;
-      color: white;
+    h2 {
+      color: #2d3a4b;
+      margin-top: 1.5em;
+    }
+    #random-summary, #search {
+      margin-bottom: 2em;
+    }
+    #random-content, #search-results {
+      margin-top: 1em;
+      background: #f0f4f8;
+      padding: 1em;
+      border-radius: 6px;
+      min-height: 48px;
+    }
+    form {
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #cfd8dc;
+      font-size: 1em;
+    }
+    button {
+      background: #3366cc;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #254a91;
+    }
+    .search-item {
+      margin-bottom: 1em;
+    }
+    .search-item-title {
+      font-weight: bold;
+      color: #3366cc;
       text-decoration: none;
-      border-radius: 5px;
     }
-    a.button:hover {
-      background-color: #005fa3;
+    .search-item-snippet {
+      margin-top: 2px;
+      color: #444;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to My Website!</h1>
-  <p>This site is hosted using <strong>GitHub Pages</strong>.</p>
-  <a href="https://github.com" class="button" target="_blank">Visit GitHub</a>
+  <div class="container">
+    <h1>Wikipedia API Search Demo</h1>
+    <section id="random-summary">
+      <h2>Random Wikipedia Summary</h2>
+      <div id="random-content">Loading...</div>
+    </section>
+    <section id="search">
+      <h2>Search Wikipedia</h2>
+      <form id="search-form">
+        <input type="text" id="query" placeholder="Enter your query..." required>
+        <button type="submit">Search</button>
+      </form>
+      <div id="search-results"></div>
+    </section>
+  </div>
+  <script>
+    // Fetch and display a random Wikipedia summary
+    function fetchRandomSummary() {
+      const randomContent = document.getElementById('random-content');
+      randomContent.textContent = 'Loading...';
+      fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary')
+        .then(response => response.json())
+        .then(data => {
+          randomContent.innerHTML = `
+            <strong>${data.title}</strong><br>
+            <p>${data.extract}</p>
+            <a href="${data.content_urls.desktop.page}" target="_blank">Read more</a>
+          `;
+        })
+        .catch(() => {
+          randomContent.textContent = 'Failed to load summary. Try refreshing!';
+        });
+    }
+
+    // Handle search form submission
+    function handleSearch(event) {
+      event.preventDefault();
+      const query = document.getElementById('query').value.trim();
+      const resultsDiv = document.getElementById('search-results');
+      if (!query) return;
+      resultsDiv.textContent = 'Searching...';
+
+      fetch(`https://en.wikipedia.org/api/rest_v1/search/page?q=${encodeURIComponent(query)}&limit=5`)
+        .then(response => response.json())
+        .then(data => {
+          if (!data.pages || data.pages.length === 0) {
+            resultsDiv.textContent = 'No results found.';
+            return;
+          }
+          resultsDiv.innerHTML = data.pages.map(page => `
+            <div class="search-item">
+              <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g, '_'))}" 
+                 class="search-item-title" target="_blank">${page.title}</a>
+              <div class="search-item-snippet">${page.extract || ''}</div>
+            </div>
+          `).join('');
+        })
+        .catch(() => {
+          resultsDiv.textContent = 'Failed to fetch results.';
+        });
+    }
+
+    document.getElementById('search-form').addEventListener('submit', handleSearch);
+
+    fetchRandomSummary();
+  </script>
 </body>
 </html>
 
